@@ -1,0 +1,40 @@
+<!doctype html>
+<head>
+  <link rel="icon" href="favicon.svg" />
+  <title>Storage TS Demo</title>
+</head>
+<body>
+  <script type="module">
+    import { createStorage, StorageType } from "./main.mjs";
+
+    const local = createStorage({ type: StorageType.LOCAL });
+
+    local.write("test", "read from local");
+
+    console.log("read test key:", local.read("test"));
+
+    console.log(local);
+
+    console.log("read empty key:", local.read("non-existent"));
+
+    const session = createStorage({ type: StorageType.SESSION });
+
+    session.write("test", "read from session");
+
+    console.log("read test key:", session.read("test"));
+
+    console.log(session);
+
+    console.log("read empty key:", session.read("non-existent"));
+
+    const memory = createStorage({ type: StorageType.IN_MEMORY });
+
+    memory.write("test", "read from in memory");
+
+    console.log("read test key:", memory.read("test"));
+
+    console.log(memory);
+
+    console.log("read empty key:", memory.read("non-existent"));
+  </script>
+</body>
