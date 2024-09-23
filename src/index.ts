@@ -13,6 +13,8 @@ export enum StorageType {
 
 export interface StorageOptions {
   type: StorageType;
+  prefix?: string;
+  silent?: boolean;
 }
 
 const createInMemoryStore = (): Storage => {
@@ -35,46 +37,75 @@ const createInMemoryStore = (): Storage => {
 const getStore = (type: StorageType): Storage => {
   switch (type) {
     case "local":
+      // Check that we are in a context where localStorage exists
       if (typeof window !== "undefined" && "localStorage" in window) {
+        // Verify that we are allowed to access the getter
         try {
           return window.localStorage;
         } catch (_) {}
       }
 
+      // Fall back to in-memory storage
       return createInMemoryStore();
     case "session":
+      // Check that we are in a context where sessionStorage exists
       if (typeof window !== "undefined" && "sessionStorage" in window) {
         try {
+          // Verify that we are allowed to access the getter
           return window.sessionStorage;
         } catch (_) {}
       }
 
+      // Fall back to in-memory storage
       return createInMemoryStore();
     default:
       return createInMemoryStore();
   }
 };
 
-export const createStorage = <T>({ type }: StorageOptions): StorageTS<T> => {
+export const createStorage = <T>({
+  type,
+  // Storage namespace
+  prefix,
+  // Fail silently
+  silent = true,
+}: StorageOptions): StorageTS<T> => {
   const store = getStore(type);
 
   return {
     write: <K extends keyof T>(key: K, value: T[K]) => {
-      store.setItem(key.toString(), JSON.stringify(value));
+      try {
+        store.setItem(
+          prefix ? `${prefix}.${key.toString()}` : key.toString(),
+          JSON.stringify(value),
+        );
+      } catch (e) {
+        if (!silent) throw e;
+      }
     },
     read: <K extends keyof T>(key: K) => {
-      let i = null;
-
       try {
-        i = store.getItem(key.toString());
-      } catch (_) {}
+        const i = store.getItem(
+          prefix ? `${prefix}.${key.toString()}` : key.toString(),
+        );
 
-      if (i === null) return i;
+        if (i === null) return i;
 
-      return JSON.parse(i) as T[K];
+        return JSON.parse(i) as T[K];
+      } catch (e) {
+        if (!silent) throw e;
+
+        return null;
+      }
     },
     delete: (key) => {
-      store.removeItem(key.toString());
+      try {
+        store.removeItem(
+          prefix ? `${prefix}.${key.toString()}` : key.toString(),
+        );
+      } catch (e) {
+        if (!silent) throw e;
+      }
     },
     clear: () => {
       store.clear();

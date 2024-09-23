@@ -6,7 +6,17 @@ If local or session storage are unavailable it will fall back to in-memory stora
 
 ## Usage
 
+```shell
+npm i @martinstark/storage-ts
+
+pnpm i @martinstark/storage-ts
+
+yarn add @martinstark/storage-ts
+```
+
 ```typescript
+import { createStorage, StorageType } from "@martinstark/storage-ts";
+
 // Create a schema of valid key value pairs
 type Schema = {
   keyA: { complex: "object" };
@@ -16,10 +26,24 @@ type Schema = {
 // Create a store of the desired type. If it is not available,
 // in-memory storage will be used as a fallback.
 const store = createStorage<Schema>({
+  // "local" persists across browser sessions
+  // "session" persists until tab is closed
+  // "in-memory" persists until tab is closed
   type: StorageType.LOCAL,
+
+  // set unique prefixes if more than one store is used
+  // optional - default: undefined
+  prefix: "id",
+
+  // squelch errors
+  // false requires try/catch statements around calls to
+  // `read` and `write`
+  // optional - default: true
+  silent: true,
 });
 
-// ❌ Argument of type number is not assignable to parameter of type { complex: "object" };
+// ❌ Argument of type number is not assignable to parameter
+// of type { complex: "object" };
 store.write("keyA", 1);
 
 // ✅
@@ -39,4 +63,6 @@ const v2 = s.read("keyB");
 
 If `window`, `localStorage` or `sessionStorage` are unavailable, in-memory storage will be created as a fallback, regardless of which `StorageType` is provided when creating the store.
 
-If access to browser storage is revoked by the user, `write` will fail silently and `read` will return `null` instead of throwing an error.
+In silent (default) mode, `write` will fail silently and `read` will return `null` instead of throwing an error.
+
+If `silent` is set to `false` read and write can throw, necessitating `try/catch` statements around each call.
