@@ -50,19 +50,19 @@ store.write("keyA", 1);
 store.write("keyA", { complex: "object" });
 
 // { complex: "object" } | null
-const v1 = s.read("keyA");
+const v1 = store.read("keyA");
 
 // ✅
 store.write("keyB", 5);
 
 // number | null
-const v2 = s.read("keyB");
+const v2 = store.read("keyB");
 ```
 
 ## Edge Cases
 
 If `window`, `localStorage` or `sessionStorage` are unavailable, in-memory storage will be created as a fallback, regardless of which `StorageType` is provided when creating the store.
 
-In silent (default) mode, `write` will fail silently and `read` will return `null` instead of throwing an error.
+In silent (default) mode, `write` will fail silently and `read` will return `null` instead of throwing.
 
 If `silent` is set to `false` read and write can throw, necessitating `try/catch` statements around each call.
